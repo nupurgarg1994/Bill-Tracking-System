@@ -1,0 +1,37 @@
+{
+  "name": "index.js",
+  "version": "1.0.0",
+  "description": "User and Billing System",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --exit"
+  },
+  "keywords": [],
+  "author": "Nupur",
+  "license": "ISC",
+  "dependencies": {
+    "basic-auth": "^2.0.1",
+    "bcrypt": "^3.0.8",
+    "body-parser": "^1.19.0",
+    "dateformat": "^3.0.3",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.6",
+    "mime": "^2.4.4",
+    "multer": "^1.4.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.1.0",
+    "owasp-password-strength-test": "^1.3.0",
+    "sequelize": "^5.21.3",
+    "sqlite3": "^4.1.1",
+    "statsd-client": "^0.4.4",
+    "uuidv4": "^6.0.2",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.627.0",
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "mocha": "^7.0.1"
+  }
+}

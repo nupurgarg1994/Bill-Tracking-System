@@ -1,0 +1,1277 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Cloud Formation Template",
+	"Parameters": {
+		"CidrBlock": {
+			"Type": "String"
+		},
+		"VpcName": {
+			"Type": "String"
+		},
+		"SubnetBlock1": {
+			"Type": "String"
+		},
+		"SubnetBlock2": {
+			"Type": "String"
+		},
+		"SubnetBlock3": {
+			"Type": "String"
+		},
+		"AvailabilityZone1": {
+			"Type": "String"
+		},
+		"AvailabilityZone2": {
+			"Type": "String"
+		},
+		"AvailabilityZone3": {
+			"Type": "String"
+		},
+		"AMIid": {
+			"Type": "String"
+		},
+		"Keyname": {
+			"Type": "String"
+		},
+		"RDSSize": {
+			"Type": "String"
+		},
+		"Ec2Size": {
+			"Type": "String"
+		},
+		"RDSAccessibility": {
+			"Type": "String"
+		},
+		"S3ARN": {
+			"Type": "String"
+		},
+		"APPNAME": {
+			"Type": "String"
+		},
+		"DEPGRP": {
+			"Type": "String"
+		},
+		"DomainName": {
+			"Type": "String"
+		},
+		"Certificate": {
+			"Type": "String"
+		},
+		"RDSUsername":{
+			"Type": "String"
+		},
+		"RDSPassword":{
+			"Type": "String"
+		}
+	},
+	"Resources": {
+		"myVPC": {
+			"Type": "AWS::EC2::VPC",
+			"Properties": {
+				"CidrBlock": {
+					"Ref": "CidrBlock"
+				},
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": {
+							"Ref": "VpcName"
+						}
+					}
+				]
+			}
+		},
+		"SubnetA": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": {
+					"Ref": "AvailabilityZone1"
+				},
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"CidrBlock": {
+					"Ref": "SubnetBlock1"
+				},
+				"MapPublicIpOnLaunch": true,
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "SubnetA"
+					}
+				]
+			}
+		},
+		"SubnetB": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": {
+					"Ref": "AvailabilityZone2"
+				},
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"CidrBlock": {
+					"Ref": "SubnetBlock2"
+				},
+				"MapPublicIpOnLaunch": true,
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "SubnetB"
+					}
+				]
+			}
+		},
+		"SubnetC": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": {
+					"Ref": "AvailabilityZone3"
+				},
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"CidrBlock": {
+					"Ref": "SubnetBlock3"
+				},
+				"MapPublicIpOnLaunch": true,
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "SubnetC"
+					}
+				]
+			}
+		},
+		"myInternetGateway": {
+			"Type": "AWS::EC2::InternetGateway",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "myInternetGateway"
+					}
+				]
+			}
+		},
+		"AttachGateway": {
+			"Type": "AWS::EC2::VPCGatewayAttachment",
+			"Properties": {
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"InternetGatewayId": {
+					"Ref": "myInternetGateway"
+				}
+			}
+		},
+		"MyRouteTable": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "csye6225_routeTable"
+					}
+				]
+			}
+		},
+		"SubnetARouteTableAssociation": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "MyRouteTable"
+				},
+				"SubnetId": {
+					"Ref": "SubnetA"
+				}
+			}
+		},
+		"SubnetBRouteTableAssociation": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "MyRouteTable"
+				},
+				"SubnetId": {
+					"Ref": "SubnetB"
+				}
+			}
+		},
+		"SubnetCRouteTableAssociation": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "MyRouteTable"
+				},
+				"SubnetId": {
+					"Ref": "SubnetC"
+				}
+			}
+		},
+		"CloudRoute": {
+			"Type": "AWS::EC2::Route",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "MyRouteTable"
+				},
+				"DestinationCidrBlock": "0.0.0.0/0",
+				"GatewayId": {
+					"Ref": "myInternetGateway"
+				}
+			}
+		},
+		"S3Bucket": {
+			"Type": "AWS::S3::Bucket",
+			"Properties": {
+				"PublicAccessBlockConfiguration": {
+					"BlockPublicAcls": true,
+					"IgnorePublicAcls": true,
+					"BlockPublicPolicy": true,
+					"RestrictPublicBuckets": true
+				},
+				"AccessControl": "Private",
+				"BucketEncryption": {
+					"ServerSideEncryptionConfiguration": [
+						{
+							"ServerSideEncryptionByDefault": {
+								"SSEAlgorithm": "AES256"
+							}
+						}
+					]
+				},
+				"LifecycleConfiguration": {
+					"Rules": [
+						{
+							"Status": "Enabled",
+							"Transition": {
+								"TransitionInDays": 30,
+								"StorageClass": "STANDARD_IA"
+							}
+						}
+					]
+				}
+			}
+		},
+		"ApplicationSecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupName": "application",
+				"GroupDescription": "Access to port 3006",
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"SecurityGroupIngress": [
+					{
+						
+							"IpProtocol": "tcp",
+							"FromPort": "22",
+							"ToPort": "22",
+							"CidrIp": "0.0.0.0/0"
+						},
+					{
+						"IpProtocol": "tcp",
+						"FromPort": "3006",
+						"ToPort": "3006",
+						"SourceSecurityGroupId": {
+							"Fn::GetAtt": [
+								"loadbalancersecuritygrp",
+								"GroupId"
+							]
+						}
+					}
+				]
+			}
+		},
+		"DatabaseSecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupName": "database",
+				"GroupDescription": "DB access",
+				"SecurityGroupIngress": [
+					{
+						"IpProtocol": "tcp",
+						"FromPort": "3306",
+						"ToPort": "3306",
+						"SourceSecurityGroupId": {
+							"Ref": "ApplicationSecurityGroup"
+						}
+					}
+				],
+				"VpcId": {
+					"Ref": "myVPC"
+				}
+			}
+		},
+		"MySqlDB": {
+			"Type": "AWS::RDS::DBInstance",
+			"Properties": {
+				"AllocatedStorage": {
+					"Ref": "RDSSize"
+				},
+				"Engine": "MySQL",
+				"DBInstanceClass": "db.t3.micro",
+				"MasterUsername": {"Ref":"RDSUsername"},
+				"MasterUserPassword": {"Ref" : "RDSPassword"},
+				"MultiAZ": "false",
+				"DBInstanceIdentifier": "csye6225-spring",
+				"DBSubnetGroupName": {
+					"Ref": "mySqlDBSubnetGroup"
+				},
+				"PubliclyAccessible": {
+					"Ref": "RDSAccessibility"
+				},
+				"DBName": "csye6225",
+				"StorageEncrypted" : "True",
+				"VPCSecurityGroups": [
+					{
+						"Ref": "DatabaseSecurityGroup"
+					}
+				],
+				"DBParameterGroupName":                     {
+                    "Ref": "RDSParameterGroup"
+                }
+			}
+		},
+		"RDSParameterGroup":{
+                "Type": "AWS::RDS::DBParameterGroup",
+                "Properties": {
+                    "Description": "Parameter Group for RDS",
+                    "Family": "mysql5.7",
+                    "Parameters": {
+                        "performance_schema": 1
+                    }
+                }
+            
+
+		},
+		"mySqlDBSubnetGroup": {
+			"Type": "AWS::RDS::DBSubnetGroup",
+			"Properties": {
+				"DBSubnetGroupDescription": "description",
+				"SubnetIds": [
+					{
+						"Ref": "SubnetA"
+					},
+					{
+						"Ref": "SubnetB"
+					}
+				]
+				
+			}
+		},
+		"ListS3BucketsInstanceProfile": {
+			"Type": "AWS::IAM::InstanceProfile",
+			"Properties": {
+				"Path": "/",
+				"Roles": [
+					{
+						"Ref": "CodeDeployServiceRole"
+					}
+				]
+			}
+		},
+		"WebAppS3": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"PolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Action": [
+								"s3:Delete*",
+								"s3:Get*",
+								"s3:Put*",
+								"s3:List*",
+								"s3:Create*"
+							],
+							"Effect": "Allow",
+							"Resource": [
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:s3:::",
+											{
+												"Ref": "S3Bucket"
+											}
+										]
+									]
+								},
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:s3:::",
+											{
+												"Ref": "S3Bucket"
+											},
+											"/*"
+										]
+									]
+								}
+							]
+						}
+					]
+				},
+				"ManagedPolicyName": "WebAppS3",
+				"Roles": [
+					{
+						"Ref": "CodeDeployServiceRole"
+					}
+				]
+			}
+		},
+		"CodeDeployServiceRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Effect": "Allow",
+							"Principal": {
+								"Service": [
+									"codedeploy.amazonaws.com",
+									"ec2.amazonaws.com"
+								]
+							},
+							"Action": [
+								"sts:AssumeRole"
+							]
+						}
+					]
+				},
+				"Path": "/",
+				"ManagedPolicyArns": [
+					"arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole",
+					"arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+					"arn:aws:iam::aws:policy/AmazonSNSFullAccess",
+					"arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+				],
+				"RoleName": "CodeDeployServiceRole"
+			}
+		},
+		"CircleCIUploadToS3": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"PolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Action": [
+								"s3:Get*",
+								"s3:PutObject",
+								"s3:List*"
+							],
+							"Effect": "Allow",
+							"Resource": [
+								{
+									"Fn::Sub": "arn:aws:s3:::${S3ARN}/*"
+								},
+								"arn:aws:s3:::aws-codedeploy-us-east-2/*",
+								"arn:aws:s3:::aws-codedeploy-us-east-1/*"
+							]
+						}
+					]
+				},
+				"ManagedPolicyName": "CircleCI-Upload-To-S3",
+				"Users": [
+					"circleci"
+				]
+			}
+		},
+		"CodeDeployEC2S3": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"PolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Action": [
+								"s3:Get*",
+								"s3:List*"
+							],
+							"Effect": "Allow",
+							"Resource": [
+								{
+									"Fn::Sub": "arn:aws:s3:::${S3ARN}/*"
+								},
+								"arn:aws:s3:::aws-codedeploy-us-east-2/*",
+								"arn:aws:s3:::aws-codedeploy-us-east-1/*"
+							]
+						}
+					]
+				},
+				"ManagedPolicyName": "CodeDeploy-EC2-S3",
+				"Roles": [
+					{
+						"Ref": "CodeDeployServiceRole"
+					}
+				]
+			}
+		},
+		"CircleCICodeDeploy": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"PolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Action": [
+								"codedeploy:RegisterApplicationRevision",
+								"codedeploy:GetApplicationRevision"
+							],
+							"Effect": "Allow",
+							"Resource": {
+								"Fn::Join": [
+									"",
+									[
+										"arn:aws:codedeploy:",
+										{
+											"Ref": "AWS::Region"
+										},
+										":",
+										{
+											"Ref": "AWS::AccountId"
+										},
+										":application:",
+										{
+											"Ref": "APPNAME"
+										}
+									]
+								]
+							}
+						},
+						{
+							"Effect": "Allow",
+							"Action": [
+								"codedeploy:CreateDeployment",
+								"codedeploy:GetDeployment",
+								"codedeploy:CreateApplication",
+								"codedeploy:CreateDeploymentGroup",
+								"IAM:PassRole"
+							],
+							"Resource": [
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:codedeploy:",
+											{
+												"Ref": "AWS::Region"
+											},
+											":",
+											{
+												"Ref": "AWS::AccountId"
+											},
+											":application:",
+											{
+												"Ref": "APPNAME"
+											}
+										]
+									]
+								},
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:codedeploy:",
+											{
+												"Ref": "AWS::Region"
+											},
+											":",
+											{
+												"Ref": "AWS::AccountId"
+											},
+											":deploymentgroup:",
+											{
+												"Ref": "APPNAME"
+											},
+											"/",
+											{
+												"Ref": "DEPGRP"
+											}
+										]
+									]
+								},
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:iam:",
+											":",
+											{
+												"Ref": "AWS::AccountId"
+											},
+											":role/",
+											{
+												"Ref": "CodeDeployServiceRole"
+											}
+										]
+									]
+								}
+							]
+						},
+						{
+							"Effect": "Allow",
+							"Action": [
+								"codedeploy:GetDeploymentConfig"
+							],
+							"Resource": [
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:codedeploy:",
+											{
+												"Ref": "AWS::Region"
+											},
+											":",
+											{
+												"Ref": "AWS::AccountId"
+											},
+											":deploymentconfig:CodeDeployDefault.OneAtATime"
+										]
+									]
+								},
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:codedeploy:",
+											{
+												"Ref": "AWS::Region"
+											},
+											":",
+											{
+												"Ref": "AWS::AccountId"
+											},
+											":deploymentconfig:CodeDeployDefault.HalfAtATime"
+										]
+									]
+								},
+								{
+									"Fn::Join": [
+										"",
+										[
+											"arn:aws:codedeploy:",
+											{
+												"Ref": "AWS::Region"
+											},
+											":",
+											{
+												"Ref": "AWS::AccountId"
+											},
+											":deploymentconfig:CodeDeployDefault.AllAtOnce"
+										]
+									]
+								}
+							]
+						}
+					]
+				},
+				"ManagedPolicyName": "CircleCI-Code-Deploy",
+				"Users": [
+					"circleci"
+				]
+			}
+		},
+		"circleciec2ami": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"PolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Action": [
+								"ec2:AttachVolume",
+								"ec2:AuthorizeSecurityGroupIngress",
+								"ec2:CopyImage",
+								"ec2:CreateImage",
+								"ec2:CreateKeypair",
+								"ec2:CreateSecurityGroup",
+								"ec2:CreateSnapshot",
+								"ec2:CreateTags",
+								"ec2:CreateVolume",
+								"ec2:DeleteKeyPair",
+								"ec2:DeleteSecurityGroup",
+								"ec2:DeleteSnapshot",
+								"ec2:DeleteVolume",
+								"ec2:DeregisterImage",
+								"ec2:DescribeImageAttribute",
+								"ec2:DescribeImages",
+								"ec2:DescribeInstances",
+								"ec2:DescribeInstanceStatus",
+								"ec2:DescribeRegions",
+								"ec2:DescribeSecurityGroups",
+								"ec2:DescribeSnapshots",
+								"ec2:DescribeSubnets",
+								"ec2:DescribeTags",
+								"ec2:DescribeVolumes",
+								"ec2:DetachVolume",
+								"ec2:GetPasswordData",
+								"ec2:ModifyImageAttribute",
+								"ec2:ModifyInstanceAttribute",
+								"ec2:ModifySnapshotAttribute",
+								"ec2:RegisterImage",
+								"ec2:RunInstances",
+								"ec2:StopInstances",
+								"ec2:TerminateInstances"
+							],
+							"Effect": "Allow",
+							"Resource": [
+								{
+									"Fn::Sub": "arn:aws:s3:::${S3ARN}/*"
+								},
+								"arn:aws:s3:::aws-codedeploy-us-east-2/*",
+								"arn:aws:s3:::aws-codedeploy-us-east-1/*"
+							]
+						}
+					]
+				},
+				"ManagedPolicyName": "circleci-ec2-ami",
+				"Users": [
+					"circleci"
+				]
+			}
+		},
+		"CodeDeployApplication": {
+			"Type": "AWS::CodeDeploy::Application",
+			"Properties": {
+				"ApplicationName": "csye6225-webapp",
+				"ComputePlatform": "Server"
+			}
+		},
+		"CodeDeploymentGroup": {
+			"Type": "AWS::CodeDeploy::DeploymentGroup",
+			"Properties": {
+				"ApplicationName": "csye6225-webapp",
+				"DeploymentGroupName": "csye6225-webapp-deployment",
+				"DeploymentConfigName": "CodeDeployDefault.AllAtOnce",
+				"DeploymentStyle": {
+					"DeploymentType": "IN_PLACE",
+					"DeploymentOption": "WITHOUT_TRAFFIC_CONTROL"
+				},
+				"Ec2TagFilters": [
+					{
+						"Key": "Name",
+						"Value": "CSYE_6225_AutoScaling",
+						"Type": "KEY_AND_VALUE"
+					}
+				],
+				"AutoRollbackConfiguration": {
+					"Enabled": "false",
+					"Events": [
+						"DEPLOYMENT_FAILURE"
+					]
+				},
+				"ServiceRoleArn": {
+					"Fn::GetAtt": [
+						"CodeDeployServiceRole",
+						"Arn"
+					]
+				}
+			}
+		},
+		"CSYE6225AutoScaling": {
+			"Type": "AWS::AutoScaling::AutoScalingGroup",
+			"Properties": {
+				"VPCZoneIdentifier": [
+					{
+						"Ref": "SubnetA"
+					},
+					{
+						"Ref": "SubnetB"
+					},
+					{
+						"Ref": "SubnetC"
+					}
+				],
+				"LaunchConfigurationName": {
+					"Ref": "Asglaunchconfig"
+				},
+				"TargetGroupARNs": [
+					{
+						"Ref": "ALBTargetGroup"
+					}
+				],
+				"MinSize": "2",
+				"MaxSize": "5",
+				"DesiredCapacity": "2",
+				"Tags": [
+					{
+						"PropagateAtLaunch": true,
+						"Key": "Name",
+						"Value": "CSYE_6225_AutoScaling"
+					}
+				]
+			}
+		},
+		"ALBTargetGroup": {
+			"Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+			"Properties": {
+				"Name": "ALBTargetGroup",
+				"Port": "3006",
+				"HealthCheckPort": "3006",
+				"Matcher": {
+					"HttpCode": "401,200"
+				},
+				"HealthCheckIntervalSeconds": 30,
+				"HealthCheckTimeoutSeconds": 20,
+				"HealthCheckPath": "/",
+				"HealthyThresholdCount": 3,
+				"Protocol": "HTTP",
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"TargetGroupAttributes": [
+					{
+						"Value": "600",
+						"Key": "deregistration_delay.timeout_seconds"
+					}
+				],
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "CSYE_6225_AutoScaling"
+					}
+				]
+			}
+		},
+		"WebServerScaleUpPolicy": {
+			"Type": "AWS::AutoScaling::ScalingPolicy",
+			"Properties": {
+				"AdjustmentType": "ChangeInCapacity",
+				"AutoScalingGroupName": {
+					"Ref": "CSYE6225AutoScaling"
+				},
+				"Cooldown": "60",
+				"ScalingAdjustment": "1"
+			}
+		},
+		"WebServerScaleDownPolicy": {
+			"Type": "AWS::AutoScaling::ScalingPolicy",
+			"Properties": {
+				"AdjustmentType": "ChangeInCapacity",
+				"AutoScalingGroupName": {
+					"Ref": "CSYE6225AutoScaling"
+				},
+				"Cooldown": "60",
+				"ScalingAdjustment": "-1"
+			}
+		},
+		"CPUAlarmHigh": {
+			"Type": "AWS::CloudWatch::Alarm",
+			"Properties": {
+				"AlarmDescription": "Scale-up if CPU > 5% for 10 minutes",
+				"MetricName": "CPUUtilization",
+				"Namespace": "AWS/EC2",
+				"Statistic": "Average",
+				"Period": "300",
+				"EvaluationPeriods": "2",
+				"Threshold": "5",
+				"AlarmActions": [
+					{
+						"Ref": "WebServerScaleUpPolicy"
+					}
+				],
+				"Dimensions": [
+					{
+						"Name": "AutoScalingGroupName",
+						"Value": {
+							"Ref": "CSYE6225AutoScaling"
+						}
+					}
+				],
+				"ComparisonOperator": "GreaterThanThreshold"
+			}
+		},
+		"CPUAlarmLow": {
+			"Type": "AWS::CloudWatch::Alarm",
+			"Properties": {
+				"AlarmDescription": "Scale-down if CPU < 3% for 10 minutes",
+				"MetricName": "CPUUtilization",
+				"Namespace": "AWS/EC2",
+				"Statistic": "Average",
+				"Period": "300",
+				"EvaluationPeriods": "2",
+				"Threshold": "3",
+				"AlarmActions": [
+					{
+						"Ref": "WebServerScaleDownPolicy"
+					}
+				],
+				"Dimensions": [
+					{
+						"Name": "AutoScalingGroupName",
+						"Value": {
+							"Ref": "CSYE6225AutoScaling"
+						}
+					}
+				],
+				"ComparisonOperator": "LessThanThreshold"
+			}
+		},
+		"Asglaunchconfig": {
+			"Type": "AWS::AutoScaling::LaunchConfiguration",
+			"Properties": {
+				"AssociatePublicIpAddress": "true",
+				"IamInstanceProfile": {
+					"Ref": "ListS3BucketsInstanceProfile"
+				},
+				"ImageId": {
+					"Ref": "AMIid"
+				},
+				"InstanceType": "t2.micro",
+				"KeyName": {
+					"Ref": "Keyname"
+				},
+				"LaunchConfigurationName": "Asglaunchconfig",
+				"SecurityGroups": [
+					{
+						"Ref": "ApplicationSecurityGroup"
+					}
+				],
+				"BlockDeviceMappings": [
+					{
+						"DeviceName": "/dev/sda1",
+						"Ebs": {
+							"VolumeSize": {
+								"Ref": "Ec2Size"
+							}
+						}
+					}
+				],
+				"UserData": {
+					"Fn::Base64": {
+						"Fn::Join": [
+							"",
+							[
+								"#cloud-boothook\n",
+								"#!/bin/sh\n",
+								"cd /etc/profile.d\n",
+								"sudo touch vars.sh\n",
+								"sudo echo export RDS_HOSTNAME=",
+								{
+									"Fn::GetAtt": [
+										"MySqlDB",
+										"Endpoint.Address"
+									]
+								},
+								" >> vars.sh\n",
+								"sudo echo export rds_Username=",
+								{
+									"Ref":"RDSUsername"
+								},
+								" >> vars.sh\n",
+								"sudo echo export RDS_UserPassword=",
+								{
+									"Ref":"RDSPassword"
+								},
+								" >> vars.sh\n",
+								"sudo echo export S3_BUCKET_NAME=",
+								{
+									"Ref": "S3Bucket"
+								},
+								" >> vars.sh\n",
+								"sudo echo export SQS_URL=",
+								{
+									"Ref": "MyQueue"
+								},
+								" >> vars.sh\n",
+								"sudo echo export SNS_ARN=",
+								{
+									"Ref": "SNSTopic"
+								},
+								" >> vars.sh\n"
+							]
+						]
+					}
+				}
+			}
+		},
+		"loadbalancersecuritygrp": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupName": "loadbalancersecuritygrp",
+				"GroupDescription": "Access to ports 22, 443 for load balancer",
+				"VpcId": {
+					"Ref": "myVPC"
+				},
+				"SecurityGroupIngress": [
+				
+					{
+						"IpProtocol": "tcp",
+						"FromPort": "22",
+						"ToPort": "22",
+						"CidrIp": "0.0.0.0/0"
+					},
+					{
+						"IpProtocol": "tcp",
+						"FromPort": "443",
+						"ToPort": "443",
+						"CidrIp": "0.0.0.0/0"
+					}
+				]
+			}
+		},
+		"myLoadBalancer": {
+			"Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+			"Properties": {
+				"IpAddressType": "ipv4",
+				"Name": "myLoadBalancer",
+				"Scheme": "internet-facing",
+				"SecurityGroups": [
+					{
+						"Ref": "loadbalancersecuritygrp"
+					}
+				],
+				"Subnets": [
+					{
+						"Ref": "SubnetA"
+					},
+					{
+						"Ref": "SubnetB"
+					},
+					{
+						"Ref": "SubnetC"
+					}
+				],
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "CSYE_6225_AutoScaling"
+					}
+				],
+				"Type": "application"
+			}
+		},
+		"Listener": {
+			"Type": "AWS::ElasticLoadBalancingV2::Listener",
+			"Properties": {
+				"Certificates":[  
+					{  
+					   "CertificateArn":{  
+						"Fn::Sub": "${Certificate}"
+					   }
+					}
+				 ],
+				"DefaultActions": [
+					{
+						"TargetGroupArn": {
+							"Ref": "ALBTargetGroup"
+						},
+						"Type": "forward"
+					}
+				],
+				"LoadBalancerArn": {
+					"Ref": "myLoadBalancer"
+				},
+				"Port": "443",
+				"Protocol": "HTTPS"
+
+			}
+		},
+		"myDNS": {
+			"Type": "AWS::Route53::RecordSet",
+			"Properties": {
+				"HostedZoneName": {
+					"Fn::Join": [
+						"",
+						[
+							{
+								"Ref": "DomainName"
+							},
+							"."
+						]
+					]
+				},
+				"Comment": "DNS name targeted to my LoadBalancer.",
+				"Name": {
+					"Fn::Join": [
+						"",
+						[
+							{
+								"Ref": "DomainName"
+							},
+							"."
+						]
+					]
+				},
+				"Type": "A",
+				"AliasTarget": {
+					"HostedZoneId": {
+						"Fn::GetAtt": [
+							"myLoadBalancer",
+							"CanonicalHostedZoneID"
+						]
+					},
+					"DNSName": {
+						"Fn::GetAtt": [
+							"myLoadBalancer",
+							"DNSName"
+						]
+					}
+				}
+			}
+		},
+		"MyQueue": {
+			"Properties": {
+				"QueueName": "MyQueue"
+			},
+			"Type": "AWS::SQS::Queue"
+		},
+		"SNSTopic": {
+			"Type": "AWS::SNS::Topic",
+			"DependsOn": "LambdaFunction",
+			"Properties": {
+				"DisplayName": "SNSTopic",
+				"Subscription": [
+					{
+						"Endpoint": {
+							"Fn::GetAtt": [
+								"LambdaFunction",
+								"Arn"
+							]
+						},
+						"Protocol": "lambda"
+					}
+				],
+				"TopicName": "SNSTopic"
+			}
+		},
+		"LambdaFunction": {
+			"Type": "AWS::Lambda::Function",
+			"DependsOn": "LambdaExecutionRole",
+			"Properties": {
+				"Code": {
+					"ZipFile": {
+						"Fn::Join": [
+							"\n",
+							[
+								"exports.handler = function (event, context, callback){ console.log('Running Lambda Function'); callback(null); }"
+							]
+						]
+					}
+				},
+				"FunctionName": "Handler",
+				"Handler": "lambdaFn.handler",
+				"Environment": {
+					"Variables": {
+						"DOMAIN_NAME": {
+							"Ref": "DomainName"
+						},
+						"TABLENAME": "csye6225"
+					}
+				},
+				"Role": {
+					"Fn::GetAtt": [
+						"LambdaExecutionRole",
+						"Arn"
+					]
+				},
+				"Runtime": "nodejs12.x",
+				"Timeout": 20
+			}
+		},
+		"LambdaResourcePolicy": {
+			"Type": "AWS::Lambda::Permission",
+			"DependsOn": "SNSTopic",
+			"Properties": {
+				"FunctionName": {
+					"Fn::GetAtt": [
+						"LambdaFunction",
+						"Arn"
+					]
+				},
+				"Principal": "sns.amazonaws.com",
+				"Action": "lambda:InvokeFunction",
+				"SourceArn": {
+					"Ref": "SNSTopic"
+				}
+			}
+		},
+		"myDynamoDB": {
+			"Type": "AWS::DynamoDB::Table",
+			"Properties": {
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				],
+				"TableName": "csye6225",
+				"BillingMode": "PAY_PER_REQUEST",
+				"TimeToLiveSpecification": {
+					"AttributeName": "ttl",
+					"Enabled": "true"
+				}
+			}
+		},
+		"LambdaExecutionRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Effect": "Allow",
+							"Principal": {
+								"Service": [
+									"lambda.amazonaws.com"
+								]
+							},
+							"Action": [
+								"sts:AssumeRole"
+							]
+						}
+					]
+				},
+				"ManagedPolicyArns": [
+					"arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+					"arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess",
+					"arn:aws:iam::aws:policy/AmazonSESFullAccess",
+					"arn:aws:iam::aws:policy/AmazonSNSFullAccess",
+					"arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+				],
+				"RoleName": "LambdaExecutionRole"
+			}
+		}
+	},
+	"Outputs": {
+		"QueueName": {
+			"Description": "The name of the queue",
+			"Value": {
+				"Fn::GetAtt": [
+					"MyQueue",
+					"QueueName"
+				]
+			}
+		},
+		"QueueURL": {
+			"Description": "The URL of the queue",
+			"Value": {
+				"Ref": "MyQueue"
+			}
+		},
+		"QueueARN": {
+			"Description": "The ARN of the queue",
+			"Value": {
+				"Fn::GetAtt": [
+					"MyQueue",
+					"Arn"
+				]
+			}
+		}
+	}
+}
